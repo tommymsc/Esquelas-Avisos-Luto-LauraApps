@@ -590,7 +590,10 @@ public class MainActivity extends Activity {
         drawPremiumAccents(ca,w,h,d.accent);
         int textColor=d.ink;int yShift=h==1920?130:0;
         if(d.layout==6){
+            // Ready-made states have their own caption layout. Never paint the
+            // generic story footer over a user's optional dedication.
             renderReadyStatus(ca,w,h,d);
+            return;
         } else if(d.layout==0){
             drawFlower(ca,835,280+yShift,115,d.accent,Color.WHITE,d.motif);drawRibbon(ca,540,465+yShift,250,d.accent);
             small(ca,"EN MEMORIA DE",540,740+yShift,30,d.accent,true);
@@ -654,18 +657,35 @@ public class MainActivity extends Activity {
     // Twelve composition families with distinct portrait geometry.
     // All geometry uses the same 1080 px canvas and adapts to 4:5 or 9:16 output.
     private void renderReadyStatus(Canvas ca,int w,int h,Design d){
-        int idx=d.motif,group=idx/6,shift=h==1920?0:-210;
-        if(group==0){drawRibbon(ca,540,615+shift,370,d.accent);drawFlower(ca,840,790+shift,114,d.accent,Color.WHITE,idx);}
-        else if(group==1){drawRibbon(ca,540,630+shift,250,d.accent);drawFlower(ca,235,645+shift,140,d.accent,Color.WHITE,idx);drawFlower(ca,815,840+shift,126,d.accent,Color.WHITE,idx);}
-        else if(group==2){drawRibbon(ca,540,615+shift,290,d.accent);drawFlower(ca,840,825+shift,135,d.accent,Color.WHITE,idx);}
-        else if(group==3){drawRibbon(ca,540,660+shift,290,d.accent);drawFlower(ca,245,820+shift,130,d.accent,Color.WHITE,idx);}
-        else {drawRibbon(ca,540,600+shift,320,d.accent);drawFlower(ca,825,795+shift,128,d.accent,Color.WHITE,idx);}
-        line(ca,285,1120+shift,795,1120+shift,d.accent,3);
-        small(ca,"UN RECUERDO ESPECIAL",540,1195+shift,27,d.accent,true);
-        headline(ca,model.date,540,1330+shift,67,d.ink,870);
-        line(ca,320,1460+shift,760,1460+shift,d.accent,2);
-        headline(ca,model.message,540,1600+shift,42,d.ink,845);
-        if(!model.name.trim().isEmpty())headline(ca,model.name,540,1760+shift,36,d.ink,850);
+        final boolean story=h>=1800;
+        final int idx=d.motif,group=idx/6;
+        // Artwork occupies the upper zone, and all text lives in reserved
+        // vertical lanes. 4:5 uses a separate compact layout (not a shift
+        // of the 9:16 layout), so no caption is clipped off the canvas.
+        final int artShift=story?0:-235;
+        if(group==0){drawRibbon(ca,540,615+artShift,370,d.accent);drawFlower(ca,840,790+artShift,114,d.accent,Color.WHITE,idx);}
+        else if(group==1){drawRibbon(ca,540,630+artShift,250,d.accent);drawFlower(ca,235,645+artShift,140,d.accent,Color.WHITE,idx);drawFlower(ca,815,840+artShift,126,d.accent,Color.WHITE,idx);}
+        else if(group==2){drawRibbon(ca,540,615+artShift,290,d.accent);drawFlower(ca,840,825+artShift,135,d.accent,Color.WHITE,idx);}
+        else if(group==3){drawRibbon(ca,540,660+artShift,290,d.accent);drawFlower(ca,245,820+artShift,130,d.accent,Color.WHITE,idx);}
+        else {drawRibbon(ca,540,600+artShift,320,d.accent);drawFlower(ca,825,795+artShift,128,d.accent,Color.WHITE,idx);}
+
+        // Three text bands and an optional dedication, with no footer
+        // rendered over the bottom band. Positions are sized for up to
+        // three wrapped lines per headline.
+        final int firstDivider=story?1110:755;
+        final int labelY=story?1185:805;
+        final int headlineY=story?1335:915;
+        final int middleDivider=story?1460:1010;
+        final int messageY=story?1580:1105;
+        final int dedicationY=story?1755:1225;
+        line(ca,285,firstDivider,795,firstDivider,d.accent,3);
+        small(ca,"UN RECUERDO ESPECIAL",540,labelY,story?27:24,d.accent,true);
+        headline(ca,model.date,540,headlineY,story?62:43,d.ink,870);
+        line(ca,320,middleDivider,760,middleDivider,d.accent,2);
+        headline(ca,model.message,540,messageY,story?39:29,d.ink,845);
+        if(model.name!=null&&!model.name.trim().isEmpty()){
+            headline(ca,model.name,540,dedicationY,story?32:26,d.ink,845);
+        }
     }
     private void renderPortraitCard(Canvas ca,int w,int h,Design d){
         int variant=d.motif, cx=540, cy=h==1920?715:500;
