@@ -1,4 +1,4 @@
-# Esquelas y Avisos de Luto — LauraApps v1.8.0 (evaluación)
+# Esquelas y Avisos de Luto — LauraApps v1.9.0 (pruebas)
 
 Proyecto Android nativo offline y demo web para crear lazos, esquelas, novenarios, homenajes con fotografías y estados de WhatsApp. Conserva el icono de lazo negro, lirio y vela aprobado.
 
@@ -24,7 +24,7 @@ En el entorno de revisión no existe Android SDK/Gradle y no se ha compilado ni 
 
 ## Privacidad y uso
 
-La versión actual no incluye permisos de internet, analíticas, AdMob, nube ni cuentas. Fotografías y proyectos permanecen en el dispositivo. Los recuerdos finales se pueden guardar como PNG o compartir. Desinstalar la aplicación puede eliminar borradores y fotos privadas.
+La versión 1.9 incluye acceso a internet exclusivamente para AdMob y la gestión de consentimiento UMP. En compilaciones de prueba se utilizan los identificadores oficiales de Google, que no monetizan. La aplicación no incluye cuentas, nube ni analítica propia; las fotografías y proyectos permanecen en el dispositivo, pero el SDK publicitario puede recopilar datos técnicos sujetos a su política y al consentimiento aplicable. Fotografías y proyectos permanecen en el dispositivo. Los recuerdos finales se pueden guardar como PNG o compartir. Desinstalar la aplicación puede eliminar borradores y fotos privadas.
 
 ## Próximo hito
 
@@ -43,3 +43,12 @@ Compilación de debug + instalación Android + depuración de cualquier error de
 - Comprobaciones de regresión automatizadas adicionales en `tests/verify_package.py`.
 
 **Alcance de verificación:** GitHub Actions compila `assembleDebug`, ejecuta reglas Java, validaciones y lint; esto no sustituye instalación, pruebas de interfaz y revisión de pantallas en teléfonos reales.
+
+
+## Publicidad v1.9
+
+La biblioteca incluye un banner adaptable con consentimiento; el editor de fotografías, las imágenes generadas y el proceso de compartir permanecen sin anuncios. Un intersticial de prueba solo puede mostrarse cuando el usuario vuelve a la biblioteca tras 3 imágenes guardadas y con separación mínima de 3 minutos. Los proyectos, fotos y PNG continúan disponibles sin conexión. **No publicar ni activar ingresos sin IDs reales de esta app, política de privacidad actualizada y declaración de seguridad de datos.** Consulta `ADMOB_CONFIGURACION.md`.
+
+## Mejoras gráficas
+
+Se integraron grabados dorados discretos en las esquinas y separadores mejor equilibrados en los retratos, manteniendo el rostro sin superposiciones publicitarias ni marcas de agua.

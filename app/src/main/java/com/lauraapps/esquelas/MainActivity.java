@@ -23,6 +23,9 @@ public class MainActivity extends Activity {
     private static final int BG=Color.rgb(248,247,245), INK=Color.rgb(37,37,41), MUTED=Color.rgb(110,108,109), GOLD=Color.rgb(128,92,50);
     private LinearLayout root, content, toolbar, options;
     private CardView preview;
+    private AdsController ads;
+    private FrameLayout homeBanner;
+    private TextView privacyButton;
     private TextView sectionTitle, subt;
     private final Model model=new Model();
     private String category="Lazos";
@@ -62,6 +65,9 @@ public class MainActivity extends Activity {
     }
     static int c(String code){return Color.parseColor(code);}
     @Override public void onCreate(Bundle b) {super.onCreate(b); getWindow().setStatusBarColor(c("#161923")); getWindow().setNavigationBarColor(c("#F8F7F5")); getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR); prefs=getSharedPreferences("design_drafts",MODE_PRIVATE); seed(); load(); loadCollections(); home(); loadDraftPhotoAsync();
+        ads=new AdsController(this,()->runOnUiThread(this::updatePrivacyButton));
+        if(homeBanner!=null)ads.attachBanner(homeBanner);
+        ads.start();
         if(Build.VERSION.SDK_INT>=33){
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{
                 if(atHome)finish();else home();
@@ -115,7 +121,13 @@ public class MainActivity extends Activity {
         return t;
     }
     private LinearLayout.LayoutParams match(int h){return new LinearLayout.LayoutParams(-1,h<0?h:dp(h));}
+    private void updatePrivacyButton(){
+        if(privacyButton!=null)privacyButton.setVisibility(
+            ads!=null&&ads.privacyOptionsRequired()?View.VISIBLE:View.GONE);
+    }
     private void setup(String heading,String caption){
+        if(ads!=null)ads.detachBanner();
+        homeBanner=null;privacyButton=null;
         atHome="Un recuerdo que abraza".equals(heading);
         ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setBackgroundColor(BG);
         if(Build.VERSION.SDK_INT>=35){
@@ -260,6 +272,13 @@ public class MainActivity extends Activity {
         LinearLayout tabs=horizontal();tabs.setPadding(0,0,0,dp(9));tabsScroll.addView(tabs);
         for(String cat:categories){TextView chip=text(cat,12,cat.equals(category)?Color.WHITE:INK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(14),dp(12),dp(14),dp(12));chip.setBackground(shape(cat.equals(category)?INK:c("#EEEAE5"),13));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(42));lp.setMargins(dp(2),0,dp(5),0);tabs.addView(chip,lp);chip.setOnClickListener(v->{category=cat;home();});}
         LinearLayout hero=vertical();hero.setPadding(dp(18),dp(14),dp(18),dp(14));hero.setBackground(shape(c("#23252C"),20));content.addView(hero,match(-2));TextView h=text("✦  Tu homenaje, a tu manera",18,Color.WHITE,true);hero.addView(h);space(hero,7);TextView s=text("Lazos que quieres compartir, retratos que abrazan y estados preparados para WhatsApp.",13,c("#E3DCD1"),false);hero.addView(s);space(content,18);
+        // Ads appear only on the library screen, never inside the editor, preview or share flow.
+        homeBanner=new FrameLayout(this);
+        homeBanner.setVisibility(View.GONE);
+        LinearLayout.LayoutParams adMargin=match(-2);
+        adMargin.setMargins(0,dp(12),0,dp(12));
+        content.addView(homeBanner,adMargin);
+        if(ads!=null)ads.attachBanner(homeBanner);
         TextView heading=text("Colección · "+category,19,INK,true);content.addView(heading);space(content,4);content.addView(text("Elige un diseño y hazlo tuyo",12,MUTED,false));space(content,12);
         for(int i=0;i<designs.size();i++){
             Design d=designs.get(i);if(!d.category.equals(category))continue; final int ix=i;
@@ -271,7 +290,10 @@ public class MainActivity extends Activity {
             item.setBackground(new RippleDrawable(android.content.res.ColorStateList.valueOf(0x18000000),shape(Color.WHITE,18),null));
             item.setOnClickListener(v->openDesign(ix));
         }
-        space(content,7);content.addView(text("♥  Sin registro · Sin conexión · Diseños hechos con respeto",11,MUTED,false));
+        space(content,7);content.addView(text("♥  Diseña sin registro · Fotografías privadas · Diseños hechos con respeto",11,MUTED,false));
+        privacyButton=click("Opciones de privacidad y anuncios",()->{if(ads!=null)ads.showPrivacyOptions();},false);
+        content.addView(privacyButton,match(-2));updatePrivacyButton();
+        if(ads!=null)ads.onHomeAfterExport();
     }
     private void editor(){
         Design d=designs.get(selected);setup("Personaliza tu recuerdo",""+d.title+" · Toca las opciones y observa los cambios al instante.");
@@ -279,7 +301,7 @@ public class MainActivity extends Activity {
         LinearLayout actions=horizontal();content.addView(actions);TextView back=click("← Diseños",this::home,false);actions.addView(back,new LinearLayout.LayoutParams(0,-2,1));TextView size=click(model.story?"Formato: Estado":"Formato: Tarjeta",()->{model.story=!model.story;saveDraft();editor();},false);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1.55f);lp.setMargins(dp(8),0,0,0);actions.addView(size,lp);space(content,12);
         FrameLayout holder=new FrameLayout(this);holder.setBackground(shape(c("#ECE7E0"),18));holder.setPadding(dp(10),dp(10),dp(10),dp(10));content.addView(holder,match(model.story?450:350));
         preview=new CardView(this,d,true);FrameLayout.LayoutParams pr=new FrameLayout.LayoutParams(-1,-1,Gravity.CENTER);holder.addView(preview,pr);
-        space(content,15);LinearLayout row=horizontal();content.addView(row);row.addView(click("✦  Cambiar diseño",()->choose(),false),new LinearLayout.LayoutParams(0,-2,1));TextView pic=click("▣  "+(portrait==null?"Añadir foto":"Cambiar foto"),this::pickPhoto,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.setMargins(dp(8),0,0,0);if(d.layout==4||d.layout==5)row.addView(pic,pp);
+        space(content,15);LinearLayout row=horizontal();content.addView(row);row.addView(click("✦  Cambiar diseño",()->choose(),false),new LinearLayout.LayoutParams(0,-2,1));TextView pic=click("▣  "+(portrait==null?"Añadir foto":"Cambiar foto"),this::pickPhoto,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.setMargins(dp(8),0,0,0);if(d.layout==1||d.layout==4||d.layout==5)row.addView(pic,pp);
         if(d.layout==4||d.layout==5){
             if(portrait==null){
                 space(content,9);
@@ -503,7 +525,10 @@ public class MainActivity extends Activity {
                         chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(chooser);
                     }catch(Exception e){toast("Imagen guardada en la galería. No fue posible abrir el menú para compartir.");}
-                }else toast("Imagen guardada en tu galería ♥");
+                }else {
+                    if(ads!=null)ads.completedImageDownload();
+                    toast("Imagen guardada en tu galería ♥");
+                }
             });
         });
     }
@@ -534,6 +559,7 @@ public class MainActivity extends Activity {
     @Override protected void onDestroy(){
         photoGeneration++;
         photoWorker.shutdown();exportWorker.shutdown();
+        if(ads!=null)ads.destroy();
         super.onDestroy();
     }
     @Override public void onBackPressed(){if(atHome)super.onBackPressed();else home();}
@@ -561,9 +587,13 @@ public class MainActivity extends Activity {
         // Soft corner illumination
         p.setShader(new RadialGradient(w*.8f,h*.2f,w*.8f,new int[]{withAlpha(d.accent,85),withAlpha(d.accent,0)},null,Shader.TileMode.CLAMP));ca.drawRect(0,0,w,h,p);p.setShader(null);
         p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(4);p.setColor(withAlpha(d.accent,190));ca.drawRoundRect(40,40,w-40,h-40,28,28,p);p.setStrokeWidth(1.2f);ca.drawRoundRect(57,57,w-57,h-57,20,20,p);p.setStyle(Paint.Style.FILL);
+        drawPremiumAccents(ca,w,h,d.accent);
         int textColor=d.ink;int yShift=h==1920?130:0;
         if(d.layout==6){
+            // Ready-made states have their own caption layout. Never paint the
+            // generic story footer over a user's optional dedication.
             renderReadyStatus(ca,w,h,d);
+            return;
         } else if(d.layout==0){
             drawFlower(ca,835,280+yShift,115,d.accent,Color.WHITE,d.motif);drawRibbon(ca,540,465+yShift,250,d.accent);
             small(ca,"EN MEMORIA DE",540,740+yShift,30,d.accent,true);
@@ -605,21 +635,57 @@ public class MainActivity extends Activity {
         if(h==1920){line(ca,370,h-235,710,h-235,d.accent,2);small(ca,"UN RECUERDO QUE VIVE PARA SIEMPRE",540,h-170,24,textColor,false);}
         else small(ca,"✦",540,h-78,30,d.accent,true);
     }
-    // Eight composition families with distinctly different portrait geometry.
+    /** Restrained engraved corner details; kept outside the text and image safe area. */
+    private void drawPremiumAccents(Canvas canvas,int width,int height,int accent){
+        Paint detail=new Paint(Paint.ANTI_ALIAS_FLAG);
+        detail.setStyle(Paint.Style.STROKE);
+        detail.setStrokeWidth(2.2f);
+        detail.setColor(withAlpha(accent,125));
+        canvas.save();
+        for(int edge=0;edge<2;edge++){
+            float x=edge==0?91:width-91;
+            float y=edge==0?112:height-112;
+            canvas.drawCircle(x,y,13,detail);
+            canvas.drawCircle(x,y,5,detail);
+            canvas.drawLine(x-29,y,x-20,y,detail);
+            canvas.drawLine(x+20,y,x+29,y,detail);
+            canvas.drawLine(x,y-29,x,y-20,detail);
+            canvas.drawLine(x,y+20,x,y+29,detail);
+        }
+        canvas.restore();
+    }
+    // Twelve composition families with distinct portrait geometry.
     // All geometry uses the same 1080 px canvas and adapts to 4:5 or 9:16 output.
     private void renderReadyStatus(Canvas ca,int w,int h,Design d){
-        int idx=d.motif,group=idx/6,shift=h==1920?0:-210;
-        if(group==0){drawRibbon(ca,540,615+shift,370,d.accent);drawFlower(ca,840,790+shift,114,d.accent,Color.WHITE,idx);}
-        else if(group==1){drawRibbon(ca,540,630+shift,250,d.accent);drawFlower(ca,235,645+shift,140,d.accent,Color.WHITE,idx);drawFlower(ca,815,840+shift,126,d.accent,Color.WHITE,idx);}
-        else if(group==2){drawRibbon(ca,540,615+shift,290,d.accent);drawFlower(ca,840,825+shift,135,d.accent,Color.WHITE,idx);}
-        else if(group==3){drawRibbon(ca,540,660+shift,290,d.accent);drawFlower(ca,245,820+shift,130,d.accent,Color.WHITE,idx);}
-        else {drawRibbon(ca,540,600+shift,320,d.accent);drawFlower(ca,825,795+shift,128,d.accent,Color.WHITE,idx);}
-        line(ca,285,1120+shift,795,1120+shift,d.accent,3);
-        small(ca,"UN RECUERDO ESPECIAL",540,1195+shift,27,d.accent,true);
-        headline(ca,model.date,540,1330+shift,67,d.ink,870);
-        line(ca,320,1460+shift,760,1460+shift,d.accent,2);
-        headline(ca,model.message,540,1600+shift,42,d.ink,845);
-        if(!model.name.trim().isEmpty())headline(ca,model.name,540,1760+shift,36,d.ink,850);
+        final boolean story=h>=1800;
+        final int idx=d.motif,group=idx/6;
+        // Artwork occupies the upper zone, and all text lives in reserved
+        // vertical lanes. 4:5 uses a separate compact layout (not a shift
+        // of the 9:16 layout), so no caption is clipped off the canvas.
+        final int artShift=story?0:-235;
+        if(group==0){drawRibbon(ca,540,615+artShift,370,d.accent);drawFlower(ca,840,790+artShift,114,d.accent,Color.WHITE,idx);}
+        else if(group==1){drawRibbon(ca,540,630+artShift,250,d.accent);drawFlower(ca,235,645+artShift,140,d.accent,Color.WHITE,idx);drawFlower(ca,815,840+artShift,126,d.accent,Color.WHITE,idx);}
+        else if(group==2){drawRibbon(ca,540,615+artShift,290,d.accent);drawFlower(ca,840,825+artShift,135,d.accent,Color.WHITE,idx);}
+        else if(group==3){drawRibbon(ca,540,660+artShift,290,d.accent);drawFlower(ca,245,820+artShift,130,d.accent,Color.WHITE,idx);}
+        else {drawRibbon(ca,540,600+artShift,320,d.accent);drawFlower(ca,825,795+artShift,128,d.accent,Color.WHITE,idx);}
+
+        // Three text bands and an optional dedication, with no footer
+        // rendered over the bottom band. Positions are sized for up to
+        // three wrapped lines per headline.
+        final int firstDivider=story?1110:755;
+        final int labelY=story?1185:805;
+        final int headlineY=story?1335:915;
+        final int middleDivider=story?1460:1010;
+        final int messageY=story?1580:1105;
+        final int dedicationY=story?1755:1225;
+        line(ca,285,firstDivider,795,firstDivider,d.accent,3);
+        small(ca,"UN RECUERDO ESPECIAL",540,labelY,story?27:24,d.accent,true);
+        headline(ca,model.date,540,headlineY,story?62:43,d.ink,870);
+        line(ca,320,middleDivider,760,middleDivider,d.accent,2);
+        headline(ca,model.message,540,messageY,story?39:29,d.ink,845);
+        if(model.name!=null&&!model.name.trim().isEmpty()){
+            headline(ca,model.name,540,dedicationY,story?32:26,d.ink,845);
+        }
     }
     private void renderPortraitCard(Canvas ca,int w,int h,Design d){
         int variant=d.motif, cx=540, cy=h==1920?715:500;
@@ -672,6 +738,9 @@ public class MainActivity extends Activity {
         }
         // Reserve a deliberately separated caption region, keeping faces uncluttered.
         float titleY=cy+(story?535:410);
+        // The caption has its own quiet visual rhythm, away from the person's face.
+        line(ca,310,(int)titleY-64,450,(int)titleY-64,withAlpha(d.accent,155),2);
+        line(ca,630,(int)titleY-64,770,(int)titleY-64,withAlpha(d.accent,155),2);
         ornament(ca,540,(int)titleY-57,d.accent);
         small(ca,story?"SIEMPRE EN MI CORAZÓN":"EN TU MEMORIA",540,(int)titleY,30,d.accent,true);
         headline(ca,model.name,540,(int)titleY+95,52,d.ink,880);
