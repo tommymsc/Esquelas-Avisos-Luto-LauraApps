@@ -1,7 +1,6 @@
 package com.lauraapps.esquelas;
 
 import android.app.Activity;
-import android.content.res.ColorStateList;
 import android.os.SystemClock;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,6 +62,7 @@ final class AdsController {
             UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity, formError -> {
                 if (!destroyed) initializeIfAllowed();
             });
+            // Cached consent from a previous launch may already allow loading.
             initializeIfAllowed();
         }, error -> {
             if (!destroyed) initializeIfAllowed(); // UMP may allow previous consent.
@@ -122,7 +122,7 @@ final class AdsController {
             int widthDp = Math.max(260,
                 (int)(activity.getResources().getDisplayMetrics().widthPixels /
                     activity.getResources().getDisplayMetrics().density) - 24);
-            ad.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+            ad.setAdSize(AdSize.getLargeAnchoredAdaptiveBannerAdSize(
                 activity, widthDp));
             banner = ad;
             bannerContainer.addView(ad, new FrameLayout.LayoutParams(
