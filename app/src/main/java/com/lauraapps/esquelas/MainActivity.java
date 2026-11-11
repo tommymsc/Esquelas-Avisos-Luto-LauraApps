@@ -20,7 +20,7 @@ import org.json.*;
 
 /** Standalone, offline-first memorial designer. No analytics, account or network permission. */
 public class MainActivity extends Activity {
-    private static final int BG=Color.rgb(248,247,245), INK=Color.rgb(37,37,41), MUTED=Color.rgb(110,108,109), GOLD=Color.rgb(172,133,77);
+    private static final int BG=Color.rgb(248,247,245), INK=Color.rgb(37,37,41), MUTED=Color.rgb(110,108,109), GOLD=Color.rgb(128,92,50);
     private LinearLayout root, content, toolbar, options;
     private CardView preview;
     private TextView sectionTitle, subt;
@@ -307,7 +307,7 @@ public class MainActivity extends Activity {
         LinearLayout projectButtons=horizontal();content.addView(projectButtons);projectButtons.addView(click("▣ Guardar proyecto",()->saveProject(false),false),new LinearLayout.LayoutParams(0,-2,1));TextView dup=click("⧉ Duplicar",()->saveProject(true),false);LinearLayout.LayoutParams dl=new LinearLayout.LayoutParams(0,-2,1);dl.setMargins(dp(8),0,0,0);projectButtons.addView(dup,dl);space(content,7);content.addView(text("Tus cambios se guardan automáticamente. Las copias independientes se conservan en Mis diseños.",11,MUTED,false));
         space(content,12);content.addView(text("COMPARTE UN RECUERDO",12,GOLD,true));space(content,8);
         LinearLayout bottom=horizontal();content.addView(bottom);bottom.addView(click("↓  Guardar imagen",()->export(false),false),new LinearLayout.LayoutParams(0,-2,1));TextView share=click("↗  Compartir",()->export(true),true);LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(0,-2,1);sp.setMargins(dp(8),0,0,0);bottom.addView(share,sp);space(content,12);
-        content.addView(text("Alta calidad · Sin marca de agua · Solo se guarda en tu teléfono",11,MUTED,false));
+        content.addView(text("PNG 1080 px · Sin marca de agua · Procesamiento privado en tu teléfono",11,MUTED,false));
     }
     interface Change {void value(String s);}
     interface ProgressChange {void value(int n);}
@@ -502,7 +502,7 @@ public class MainActivity extends Activity {
                         Intent chooser=Intent.createChooser(send,"Compartir recuerdo");
                         chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(chooser);
-                    }catch(ActivityNotFoundException e){toast("Imagen guardada. No se encontró una app para compartir.");}
+                    }catch(Exception e){toast("Imagen guardada en la galería. No fue posible abrir el menú para compartir.");}
                 }else toast("Imagen guardada en tu galería ♥");
             });
         });
