@@ -20,4 +20,9 @@ assert 'getOnBackInvokedDispatcher' in java
 assert 'function drawTiles()' in html and 'function prepareWebPhoto' in html
 assert (root/'app/src/main/res/drawable/app_icon.jpg').is_file()
 assert len(re.findall(r'\{"[^"\n]+", "[^"\n]+", "[^"\n]+"\}',java))>=30
-print('PASS 13 checks: privacy, Android 16, build settings, photos, export, navigation, templates and icon')
+assert 'Falta la fotografía' in java and 'Elegir fotografía' in java
+assert 'RippleDrawable' in java
+assert 'setFocusable(true)' in java
+assert 'No fue posible abrir el menú para compartir' in java
+assert 'GOLD=Color.rgb(128,92,50)' in java
+print('PASS 18 checks: privacy, Android 16, build settings, photos, export, navigation, UX, accessibility, templates and icon')
