@@ -12,7 +12,7 @@ jobs:
   build:
     name: Android 16 - Debug APK y verificaciones
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - name: Descargar el repositorio
         uses: actions/checkout@v4
@@ -45,36 +45,28 @@ jobs:
         run: |
           python3 tests/verify_package.py
           node --check tests/demo.js
-      - name: Compilar APK y analizar Android
-        run: gradle :app:assembleDebug :app:lintDebug --no-daemon --stacktrace --warning-mode all
-      - name: Verificar APK generado
-        run: |
-          test -s app/build/outputs/apk/debug/app-debug.apk
-          sha256sum app/build/outputs/apk/debug/app-debug.apk
-          ls -lh app/build/outputs/apk/debug/app-debug.apk
-      - name: Publicar APK descargable
-        uses: actions/upload-artifact@v4
-        with:
-          name: Esquelas-Avisos-Luto-v2-0-debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 30
-      - name: Compilar Android App Bundle release sin firma
-        run: gradle :app:bundleRelease --no-daemon --stacktrace
-      - name: Verificar AAB release
+      - name: Compilar AAB release y APK debug con verificación lint
+        run: gradle :app:bundleRelease :app:assembleDebug :app:lintDebug --no-daemon --stacktrace
+      - name: Comprobar AAB y APK
         run: |
           test -s app/build/outputs/bundle/release/app-release.aab
-          sha256sum app/build/outputs/bundle/release/app-release.aab
+          test -s app/build/outputs/apk/debug/app-debug.apk
           unzip -t app/build/outputs/bundle/release/app-release.aab | tail -n 1
-      - name: Publicar AAB sin firma para firma fuera de GitHub
+          sha256sum app/build/outputs/bundle/release/app-release.aab
+          ls -lh app/build/outputs/bundle/release/app-release.aab
+          echo "AAB sin firma. No subir a Play Console sin firmar con clave de subida." >> "$GITHUB_STEP_SUMMARY"
+      - name: Subir AAB sin firma
+        id: aab_artifact
         uses: actions/upload-artifact@v4
+        timeout-minutes: 4
         with:
-          name: Esquelas-v2-0-AAB-sin-firmar
+          name: Esquelas-v2-0-AAB-release-sin-firmar
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
       - name: Publicar reportes de lint
-        if: always()
+        if: failure() && steps.aab_artifact.outcome != 'failure'
+        timeout-minutes: 2
         uses: actions/upload-artifact@v4
         with:
           name: Esquelas-Reportes-Lint
