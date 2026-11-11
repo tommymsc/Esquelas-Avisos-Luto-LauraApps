@@ -293,7 +293,16 @@ public class MainActivity extends Activity {
         space(content,7);content.addView(text("♥  Diseña sin registro · Fotografías privadas · Diseños hechos con respeto",11,MUTED,false));
         privacyButton=click("Opciones de privacidad y anuncios",()->{if(ads!=null)ads.showPrivacyOptions();},false);
         content.addView(privacyButton,match(-2));updatePrivacyButton();
-        if(ads!=null)ads.onHomeAfterExport();
+        space(content,8);
+        content.addView(click("Política de privacidad de LauraApps",()->{
+            try {
+                Intent web=new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://tommymsc.github.io/lauraapps-privacy/esquelas-privacy.html"));
+                startActivity(web);
+            } catch(Exception e) {
+                toast("No se pudo abrir la política. Puedes consultarla desde la ficha de Google Play.");
+            }
+        },false),match(-2));
     }
     private void editor(){
         Design d=designs.get(selected);setup("Personaliza tu recuerdo",""+d.title+" · Toca las opciones y observa los cambios al instante.");
@@ -526,8 +535,10 @@ public class MainActivity extends Activity {
                         startActivity(chooser);
                     }catch(Exception e){toast("Imagen guardada en la galería. No fue posible abrir el menú para compartir.");}
                 }else {
-                    if(ads!=null)ads.completedImageDownload();
-                    toast("Imagen guardada en tu galería ♥");
+                    if(ads!=null)ads.afterSuccessfulSave(() -> {
+                        if(!isDestroyed())toast("Imagen guardada en tu galería ♥");
+                    });
+                    else toast("Imagen guardada en tu galería ♥");
                 }
             });
         });

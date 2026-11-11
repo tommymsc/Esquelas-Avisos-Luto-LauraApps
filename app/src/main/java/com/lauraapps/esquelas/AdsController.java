@@ -175,30 +175,42 @@ final class AdsController {
             });
     }
 
-    void completedImageDownload() {
+    /**
+     * The image has ALREADY been saved to MediaStore before entering this hook.
+     * Ads run only in an occasional natural completion pause, never on each
+     * download button press. The completion callback must run in every path.
+     */
+    void afterSuccessfulSave(Runnable showSavedConfirmation) {
         completedDownloads = Math.min(3, completedDownloads + 1);
-    }
-
-    /** Called only when returning home, not while editing or sharing. */
-    void onHomeAfterExport() {
         long now = SystemClock.elapsedRealtime();
-        if (!ready || destroyed || consent == null || !consent.canRequestAds() ||
-            completedDownloads < 3 || interstitial == null ||
-            now-startedAt < MIN_DELAY_MS ||
-            (lastInterstitialAt != 0 && now-lastInterstitialAt < MIN_DELAY_MS)) return;
+        boolean eligible = ready && !destroyed && consent != null &&
+            consent.canRequestAds() && interstitial != null &&
+            completedDownloads >= 3 &&
+            now - startedAt >= MIN_DELAY_MS &&
+            (lastInterstitialAt == 0L || now-lastInterstitialAt >= MIN_DELAY_MS);
+        if (!eligible) {
+            showSavedConfirmation.run();
+            return;
+        }
+
         InterstitialAd ad = interstitial;
         interstitial = null;
         completedDownloads = 0;
         lastInterstitialAt = now;
+        java.util.concurrent.atomic.AtomicBoolean finished =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+        Runnable finish = () -> {
+            if (finished.compareAndSet(false, true)) {
+                showSavedConfirmation.run();
+                if (!destroyed) loadInterstitial();
+            }
+        };
         ad.setFullScreenContentCallback(new FullScreenContentCallback() {
-            @Override public void onAdDismissedFullScreenContent() {
-                if (!destroyed) loadInterstitial();
-            }
-            @Override public void onAdFailedToShowFullScreenContent(AdError error) {
-                if (!destroyed) loadInterstitial();
-            }
+            @Override public void onAdDismissedFullScreenContent() { finish.run(); }
+            @Override public void onAdFailedToShowFullScreenContent(AdError error) { finish.run(); }
         });
-        try { ad.show(activity); } catch (RuntimeException ignored) { loadInterstitial(); }
+        try { ad.show(activity); }
+        catch (RuntimeException exception) { finish.run(); }
     }
 
     void destroy() {

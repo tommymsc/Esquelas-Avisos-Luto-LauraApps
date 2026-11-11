@@ -1,15 +1,23 @@
 # AdMob · Esquelas y Avisos de Luto v1.9
 
+## Identificadores reales confirmados desde la consola de la aplicación
+- **Aplicación:** `ca-app-pub-2506564165861733~2453279576`
+- **Banner:** `ca-app-pub-2506564165861733/5215174288`
+- **Intersticial:** `ca-app-pub-2506564165861733/4281366564`
+- **Estado AdMob informado:** «Debe revisarse». No equivale a aprobación ni garantiza publicación de anuncios.
+
+**En el código v1.9.1:** debug usa el ID de aplicación y las unidades de prueba de Google; release usa por defecto estos tres IDs reales, con opción de sobrescribirlos mediante propiedades Gradle. La integración no supone publicación ni aprobación de AdMob.
+
 ## Estado actual
 La app incluye la integración técnica de **Google Mobile Ads 25.5.0 (SDK heredado aún compatible)** y **UMP 4.0.0**. La versión DEBUG utiliza exclusivamente identificadores de prueba oficiales de Google: **no produce ingresos**.
 
-La versión RELEASE exige identificadores propios de **Esquelas y Avisos de Luto**, no de otra app de LauraApps. Si faltan, las unidades quedan vacías y no se solicitan anuncios. Antes de publicar se deben sustituir y verificar los identificadores y políticas de privacidad.
+La versión RELEASE exige identificadores propios de **Esquelas y Avisos de Luto**, no de otra app de LauraApps. Los IDs reales ya están configurados en la variante release de este proyecto. Si alguien los reemplaza por valores inválidos, la construcción de producción se bloqueará. Antes de publicar se deben sustituir y verificar los identificadores y políticas de privacidad.
 
-## Crear la aplicación en AdMob
-1. Registrar como nueva aplicación Android: **Esquelas y Avisos de Luto**, paquete **com.lauraapps.esquelas**.
-2. Obtener el **ID de aplicación**: `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY`.
-3. Crear una unidad **Banner**: `ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY`.
-4. Crear una unidad **Intersticial**: `ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ`.
+## Preparación de la publicación
+1. Confirmar que el paquete Android registrado es **com.lauraapps.esquelas** y completar la revisión de AdMob.
+2. Verificar en AdMob que el ID de aplicación indicado arriba está asociado a esta app.
+3. Verificar la unidad **Banner** ya creada.
+4. Verificar la unidad **Intersticial** ya creada.
 5. Configurar **Privacidad y mensajes** de AdMob para mercados relevantes y revisar consentimiento UMP.
 6. En la compilación de producción configurar las propiedades de Gradle por mecanismo seguro, fuera del repositorio:
    `ADMOB_APP_ID`, `ADMOB_BANNER_UNIT_ID`, `ADMOB_INTERSTITIAL_UNIT_ID`.
