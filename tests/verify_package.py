@@ -9,7 +9,7 @@ html=(root/'demo/index.html').read_text()
 assert 'android.permission.INTERNET' not in manifest
 assert 'android:allowBackup="false"' in manifest
 assert 'targetSdk 36' in gradle and 'compileSdk 36' in gradle
-assert 'versionName \'1.7.0\'' in gradle
+assert 'versionName \'1.8.0\'' in gradle
 assert 'gradle-version: \'8.11.1\'' in ci
 assert 'platforms;android-36' in ci
 assert 'private_portraits' in java
