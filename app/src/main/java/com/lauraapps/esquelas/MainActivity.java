@@ -301,7 +301,7 @@ public class MainActivity extends Activity {
         LinearLayout actions=horizontal();content.addView(actions);TextView back=click("← Diseños",this::home,false);actions.addView(back,new LinearLayout.LayoutParams(0,-2,1));TextView size=click(model.story?"Formato: Estado":"Formato: Tarjeta",()->{model.story=!model.story;saveDraft();editor();},false);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1.55f);lp.setMargins(dp(8),0,0,0);actions.addView(size,lp);space(content,12);
         FrameLayout holder=new FrameLayout(this);holder.setBackground(shape(c("#ECE7E0"),18));holder.setPadding(dp(10),dp(10),dp(10),dp(10));content.addView(holder,match(model.story?450:350));
         preview=new CardView(this,d,true);FrameLayout.LayoutParams pr=new FrameLayout.LayoutParams(-1,-1,Gravity.CENTER);holder.addView(preview,pr);
-        space(content,15);LinearLayout row=horizontal();content.addView(row);row.addView(click("✦  Cambiar diseño",()->choose(),false),new LinearLayout.LayoutParams(0,-2,1));TextView pic=click("▣  "+(portrait==null?"Añadir foto":"Cambiar foto"),this::pickPhoto,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.setMargins(dp(8),0,0,0);if(d.layout==4||d.layout==5)row.addView(pic,pp);
+        space(content,15);LinearLayout row=horizontal();content.addView(row);row.addView(click("✦  Cambiar diseño",()->choose(),false),new LinearLayout.LayoutParams(0,-2,1));TextView pic=click("▣  "+(portrait==null?"Añadir foto":"Cambiar foto"),this::pickPhoto,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.setMargins(dp(8),0,0,0);if(d.layout==1||d.layout==4||d.layout==5)row.addView(pic,pp);
         if(d.layout==4||d.layout==5){
             if(portrait==null){
                 space(content,9);
@@ -587,6 +587,7 @@ public class MainActivity extends Activity {
         // Soft corner illumination
         p.setShader(new RadialGradient(w*.8f,h*.2f,w*.8f,new int[]{withAlpha(d.accent,85),withAlpha(d.accent,0)},null,Shader.TileMode.CLAMP));ca.drawRect(0,0,w,h,p);p.setShader(null);
         p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(4);p.setColor(withAlpha(d.accent,190));ca.drawRoundRect(40,40,w-40,h-40,28,28,p);p.setStrokeWidth(1.2f);ca.drawRoundRect(57,57,w-57,h-57,20,20,p);p.setStyle(Paint.Style.FILL);
+        drawPremiumAccents(ca,w,h,d.accent);
         int textColor=d.ink;int yShift=h==1920?130:0;
         if(d.layout==6){
             renderReadyStatus(ca,w,h,d);
@@ -631,7 +632,26 @@ public class MainActivity extends Activity {
         if(h==1920){line(ca,370,h-235,710,h-235,d.accent,2);small(ca,"UN RECUERDO QUE VIVE PARA SIEMPRE",540,h-170,24,textColor,false);}
         else small(ca,"✦",540,h-78,30,d.accent,true);
     }
-    // Eight composition families with distinctly different portrait geometry.
+    /** Restrained engraved corner details; kept outside the text and image safe area. */
+    private void drawPremiumAccents(Canvas canvas,int width,int height,int accent){
+        Paint detail=new Paint(Paint.ANTI_ALIAS_FLAG);
+        detail.setStyle(Paint.Style.STROKE);
+        detail.setStrokeWidth(2.2f);
+        detail.setColor(withAlpha(accent,125));
+        canvas.save();
+        for(int edge=0;edge<2;edge++){
+            float x=edge==0?91:width-91;
+            float y=edge==0?112:height-112;
+            canvas.drawCircle(x,y,13,detail);
+            canvas.drawCircle(x,y,5,detail);
+            canvas.drawLine(x-29,y,x-20,y,detail);
+            canvas.drawLine(x+20,y,x+29,y,detail);
+            canvas.drawLine(x,y-29,x,y-20,detail);
+            canvas.drawLine(x,y+20,x,y+29,detail);
+        }
+        canvas.restore();
+    }
+    // Twelve composition families with distinct portrait geometry.
     // All geometry uses the same 1080 px canvas and adapts to 4:5 or 9:16 output.
     private void renderReadyStatus(Canvas ca,int w,int h,Design d){
         int idx=d.motif,group=idx/6,shift=h==1920?0:-210;
@@ -698,6 +718,9 @@ public class MainActivity extends Activity {
         }
         // Reserve a deliberately separated caption region, keeping faces uncluttered.
         float titleY=cy+(story?535:410);
+        // The caption has its own quiet visual rhythm, away from the person's face.
+        line(ca,310,(int)titleY-64,450,(int)titleY-64,withAlpha(d.accent,155),2);
+        line(ca,630,(int)titleY-64,770,(int)titleY-64,withAlpha(d.accent,155),2);
         ornament(ca,540,(int)titleY-57,d.accent);
         small(ca,story?"SIEMPRE EN MI CORAZÓN":"EN TU MEMORIA",540,(int)titleY,30,d.accent,true);
         headline(ca,model.name,540,(int)titleY+95,52,d.ink,880);
