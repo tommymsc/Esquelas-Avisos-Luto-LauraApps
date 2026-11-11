@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
     private static boolean isDark(int x){return (Color.red(x)*.299+Color.green(x)*.587+Color.blue(x)*.114)<145;}
     private int dp(float x){return (int)(getResources().getDisplayMetrics().density*x+0.5f);}
     private GradientDrawable shape(int color,float rad){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(rad));return d;}
-    private TextView text(String txt,float sp,int color,boolean bold){TextView t=new TextView(this); t.setText(txt);t.setTextSize(sp);t.setTextColor(color);if(bold)t.setTypeface(null,1);return t;}
+    private TextView text(String txt,float sp,int color,boolean bold){TextView t=new TextView(this); t.setText(txt);t.setTextSize(sp);t.setTextColor(color);if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
     private LinearLayout vertical(){LinearLayout a=new LinearLayout(this);a.setOrientation(LinearLayout.VERTICAL);return a;}
     private LinearLayout horizontal(){LinearLayout a=new LinearLayout(this);a.setOrientation(LinearLayout.HORIZONTAL);a.setGravity(Gravity.CENTER_VERTICAL);return a;}
     private void space(LinearLayout p,int h){View v=new View(this);p.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
