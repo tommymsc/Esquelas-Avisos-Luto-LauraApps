@@ -34,3 +34,22 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:25.5.0'
     implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
 }
+
+/**
+ * Never ship a production package that accidentally contains Google's demo app ID.
+ * Debug builds intentionally use test IDs and remain freely buildable.
+ */
+tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {
+    doFirst {
+        def appId = (project.findProperty('ADMOB_APP_ID') ?: '').toString()
+        def bannerId = (project.findProperty('ADMOB_BANNER_UNIT_ID') ?: '').toString()
+        def interstitialId = (project.findProperty('ADMOB_INTERSTITIAL_UNIT_ID') ?: '').toString()
+        if (!appId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') ||
+            !bannerId.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ||
+            !interstitialId.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ||
+            appId.startsWith('ca-app-pub-3940256099942544')) {
+            throw new GradleException(
+                'Release bloqueada: configura los IDs reales de AdMob para esta aplicación.')
+        }
+    }
+}
