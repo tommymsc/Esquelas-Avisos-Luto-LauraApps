@@ -654,7 +654,7 @@ public class MainActivity extends Activity {
             p.setShader(new LinearGradient(0,y-height/2,0,y+height/2,c("#D7D0C4"),c("#6C727B"),Shader.TileMode.CLAMP));
             ca.drawRect(x-width/2f,y-height/2f,x+width/2f,y+height/2f,p);p.setShader(null);
             p.setColor(withAlpha(Color.WHITE,160));ca.drawCircle(x,y-30,75,p);ca.drawOval(x-150,y+50,x+150,y+295,p);
-            Paint tx=new Paint(3);tx.setTypeface(Typeface.create("sans-serif-medium",0));tx.setTextSize(28);tx.setColor(Color.WHITE);tx.setTextAlign(Paint.Align.CENTER);
+            Paint tx=new Paint(3);tx.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL));tx.setTextSize(28);tx.setColor(Color.WHITE);tx.setTextAlign(Paint.Align.CENTER);
             ca.drawText("AÑADIR FOTO",x,y+height/2f-46,tx);
         }
         ca.restore();
