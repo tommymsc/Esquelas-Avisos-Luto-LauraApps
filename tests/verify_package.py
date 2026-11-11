@@ -32,7 +32,7 @@ assert 'com.google.android.ump:user-messaging-platform:4.0.0' in gradle
 assert 'ca-app-pub-3940256099942544/9214589741' in gradle
 assert 'getLargeAnchoredAdaptiveBannerAdSize' in ads
 assert 'canRequestAds()' in ads
-assert 'MIN_DELAY_MS' in ads and 'completedDownloads < 3' in ads
+assert 'MIN_DELAY_MS' in ads and 'completedDownloads >= 3' in ads
 assert 'renderReadyStatus(ca,w,h,d);\n            return;' in java
 assert 'final int dedicationY=story?1755:1225;' in java
 assert 'final int middleDivider=story?1460:1010;' in java
