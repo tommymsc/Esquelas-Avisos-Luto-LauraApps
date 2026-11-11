@@ -3,7 +3,7 @@ name: Compilar Esquelas y Avisos de Luto (APK)
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [main, master, 'improve/**']
 
 permissions:
   contents: read
@@ -55,7 +55,7 @@ jobs:
       - name: Publicar APK descargable
         uses: actions/upload-artifact@v4
         with:
-          name: Esquelas-Avisos-Luto-v1-7-debug-APK
+          name: Esquelas-Avisos-Luto-v1-8-debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30

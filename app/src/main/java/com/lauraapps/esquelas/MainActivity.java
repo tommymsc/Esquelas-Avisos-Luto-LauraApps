@@ -20,7 +20,7 @@ import org.json.*;
 
 /** Standalone, offline-first memorial designer. No analytics, account or network permission. */
 public class MainActivity extends Activity {
-    private static final int BG=Color.rgb(248,247,245), INK=Color.rgb(37,37,41), MUTED=Color.rgb(110,108,109), GOLD=Color.rgb(172,133,77);
+    private static final int BG=Color.rgb(248,247,245), INK=Color.rgb(37,37,41), MUTED=Color.rgb(110,108,109), GOLD=Color.rgb(128,92,50);
     private LinearLayout root, content, toolbar, options;
     private CardView preview;
     private TextView sectionTitle, subt;
@@ -101,7 +101,19 @@ public class MainActivity extends Activity {
     private LinearLayout vertical(){LinearLayout a=new LinearLayout(this);a.setOrientation(LinearLayout.VERTICAL);return a;}
     private LinearLayout horizontal(){LinearLayout a=new LinearLayout(this);a.setOrientation(LinearLayout.HORIZONTAL);a.setGravity(Gravity.CENTER_VERTICAL);return a;}
     private void space(LinearLayout p,int h){View v=new View(this);p.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
-    private TextView click(String title,Runnable r,boolean primary){TextView t=text(title,14,primary?Color.WHITE:INK,true);t.setGravity(Gravity.CENTER);t.setPadding(dp(15),dp(13),dp(15),dp(13));t.setBackground(shape(primary?INK:c("#F0EDE8"),14));t.setMinHeight(dp(48));t.setMaxLines(3);t.setContentDescription(title);t.setOnClickListener(v->r.run());return t;}
+    private TextView click(String title,Runnable r,boolean primary){
+        TextView t=text(title,14,primary?Color.WHITE:INK,true);
+        t.setGravity(Gravity.CENTER);
+        t.setPadding(dp(12),dp(13),dp(12),dp(13));
+        GradientDrawable surface=shape(primary?INK:c("#F0EDE8"),14);
+        android.content.res.ColorStateList ripple=android.content.res.ColorStateList.valueOf(primary?0x44FFFFFF:0x22000000);
+        t.setBackground(new RippleDrawable(ripple,surface,null));
+        t.setMinHeight(dp(50));t.setMaxLines(3);
+        t.setContentDescription(title);
+        t.setFocusable(true);
+        t.setOnClickListener(v->r.run());
+        return t;
+    }
     private LinearLayout.LayoutParams match(int h){return new LinearLayout.LayoutParams(-1,h<0?h:dp(h));}
     private void setup(String heading,String caption){
         atHome="Un recuerdo que abraza".equals(heading);
@@ -118,7 +130,12 @@ public class MainActivity extends Activity {
         LinearLayout bar=horizontal();bar.setPadding(dp(20),dp(19),dp(20),dp(10));root.addView(bar);
         LinearLayout brand=vertical();TextView brandName=text("LAURAAPPS  /  MEMORIAS",11,GOLD,true);brand.addView(brandName);TextView top=text("Esquelas & Luto",23,INK,true);brand.addView(top);bar.addView(brand,new LinearLayout.LayoutParams(0,-2,1));TextView heart=text("✦",25,GOLD,true);bar.addView(heart);
         content=vertical();content.setPadding(dp(18),dp(8),dp(18),dp(30));root.addView(content);
-        sectionTitle=text(heading,23,INK,true);content.addView(sectionTitle);space(content,3);subt=text(caption,13,MUTED,false);content.addView(subt);space(content,18);
+        sectionTitle=text(heading,23,INK,true);content.addView(sectionTitle);
+        space(content,6);
+        subt=text(caption,13,MUTED,false);subt.setLineSpacing(dp(3),1f);content.addView(subt);
+        space(content,10);
+        View accentLine=new View(this);accentLine.setBackground(shape(GOLD,3));content.addView(accentLine,new LinearLayout.LayoutParams(dp(42),dp(3)));
+        space(content,17);
     }
     private static final String[][] STATUS_PRESETS = new String[][]{
         {"Lazo eterno", "Hoy mi corazón está de luto", "Tu recuerdo vivirá siempre en mí."},
@@ -228,7 +245,17 @@ public class MainActivity extends Activity {
     private void phrasePicker(){String[] list={"Siempre en nuestros corazones","Tu recuerdo será eterno","Vuela alto","Descansa en paz","Tu amor permanece","Hoy mi corazón está de luto","Que brille para ti la luz perpetua","Gracias por tantos momentos","Te llevamos siempre en el corazón","Una luz que nunca se apaga","Hasta siempre","Tu memoria florece"};new AlertDialog.Builder(this).setTitle("Elige una frase").setItems(list,(d,i)->{model.date=list[i];saveDraft();editor();}).setNegativeButton("Cancelar",null).show();}
     private void home(){
         setup("Un recuerdo que abraza","Diseños hermosos, hechos con cariño. Personaliza y comparte en minutos.");
-        LinearLayout quick=horizontal();content.addView(quick);for(String title:new String[]{"♡ Favoritos","↺ Recientes","▦ Mis diseños"}){Runnable action=title.startsWith("♡")?this::showFavorites:title.startsWith("↺")?this::showRecent:this::showSaved;TextView b=click(title,action,false);LinearLayout.LayoutParams q=new LinearLayout.LayoutParams(0,-2,1);q.setMargins(0,0,dp(5),dp(10));quick.addView(b,q);}space(content,8);
+        LinearLayout quick=horizontal();content.addView(quick);
+        boolean narrow=getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().density<360;
+        if(narrow)quick.setOrientation(LinearLayout.VERTICAL);
+        for(String title:new String[]{"♡ Favoritos","↺ Recientes","▦ Mis diseños"}){
+            Runnable action=title.startsWith("♡")?this::showFavorites:title.startsWith("↺")?this::showRecent:this::showSaved;
+            TextView b=click(title,action,false);
+            LinearLayout.LayoutParams q=narrow?new LinearLayout.LayoutParams(-1,-2):new LinearLayout.LayoutParams(0,-2,1);
+            q.setMargins(0,0,narrow?0:dp(5),dp(10));
+            quick.addView(b,q);
+        }
+        space(content,8);
         HorizontalScrollView tabsScroll=new HorizontalScrollView(this);tabsScroll.setHorizontalScrollBarEnabled(false);content.addView(tabsScroll);
         LinearLayout tabs=horizontal();tabs.setPadding(0,0,0,dp(9));tabsScroll.addView(tabs);
         for(String cat:categories){TextView chip=text(cat,12,cat.equals(category)?Color.WHITE:INK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(14),dp(12),dp(14),dp(12));chip.setBackground(shape(cat.equals(category)?INK:c("#EEEAE5"),13));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(42));lp.setMargins(dp(2),0,dp(5),0);tabs.addView(chip,lp);chip.setOnClickListener(v->{category=cat;home();});}
@@ -238,7 +265,11 @@ public class MainActivity extends Activity {
             Design d=designs.get(i);if(!d.category.equals(category))continue; final int ix=i;
             LinearLayout item=horizontal();item.setPadding(dp(10),dp(10),dp(12),dp(10));item.setBackground(shape(Color.WHITE,18));LinearLayout.LayoutParams ip=match(-2);ip.setMargins(0,0,0,dp(10));content.addView(item,ip);
             DesignView th=new DesignView(this,d,false);item.addView(th,new LinearLayout.LayoutParams(dp(87),dp(113)));
-            LinearLayout info=vertical();info.setPadding(dp(13),0,dp(3),0);item.addView(info,new LinearLayout.LayoutParams(0,-2,1));space(info,8);info.addView(text(d.title,16,INK,true));space(info,6);info.addView(text(d.layout==0?"Lazo listo para estado":d.layout==1?"Aviso personalizado":d.layout==2?"Invitación a ceremonia":d.layout==4?"Retrato personalizado":d.layout==5?"Estado con fotografía":d.layout==6?"Listo para compartir · Sin foto":"Un mensaje de cariño",12,MUTED,false));space(info,11);TextView edit=text("Personalizar  →",13,GOLD,true);info.addView(edit);item.setOnClickListener(v->openDesign(ix));
+            LinearLayout info=vertical();info.setPadding(dp(13),0,dp(3),0);item.addView(info,new LinearLayout.LayoutParams(0,-2,1));space(info,8);info.addView(text(d.title,16,INK,true));space(info,6);info.addView(text(d.layout==0?"Lazo listo para estado":d.layout==1?"Aviso personalizado":d.layout==2?"Invitación a ceremonia":d.layout==4?"Retrato personalizado":d.layout==5?"Estado con fotografía":d.layout==6?"Listo para compartir · Sin foto":"Un mensaje de cariño",12,MUTED,false));space(info,11);TextView edit=text("Personalizar  →",13,GOLD,true);info.addView(edit);
+            item.setContentDescription(d.title+". Personalizar diseño");
+            item.setFocusable(true);item.setClickable(true);
+            item.setBackground(new RippleDrawable(android.content.res.ColorStateList.valueOf(0x18000000),shape(Color.WHITE,18),null));
+            item.setOnClickListener(v->openDesign(ix));
         }
         space(content,7);content.addView(text("♥  Sin registro · Sin conexión · Diseños hechos con respeto",11,MUTED,false));
     }
@@ -248,8 +279,14 @@ public class MainActivity extends Activity {
         LinearLayout actions=horizontal();content.addView(actions);TextView back=click("← Diseños",this::home,false);actions.addView(back,new LinearLayout.LayoutParams(0,-2,1));TextView size=click(model.story?"Formato: Estado":"Formato: Tarjeta",()->{model.story=!model.story;saveDraft();editor();},false);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1.55f);lp.setMargins(dp(8),0,0,0);actions.addView(size,lp);space(content,12);
         FrameLayout holder=new FrameLayout(this);holder.setBackground(shape(c("#ECE7E0"),18));holder.setPadding(dp(10),dp(10),dp(10),dp(10));content.addView(holder,match(model.story?450:350));
         preview=new CardView(this,d,true);FrameLayout.LayoutParams pr=new FrameLayout.LayoutParams(-1,-1,Gravity.CENTER);holder.addView(preview,pr);
-        space(content,15);LinearLayout row=horizontal();content.addView(row);row.addView(click("✦  Cambiar diseño",()->choose(),false),new LinearLayout.LayoutParams(0,-2,1));TextView pic=click("▣  "+(portrait==null?"Añadir foto":"Cambiar foto"),this::pickPhoto,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.setMargins(dp(8),0,0,0);if(d.layout!=6)row.addView(pic,pp);
+        space(content,15);LinearLayout row=horizontal();content.addView(row);row.addView(click("✦  Cambiar diseño",()->choose(),false),new LinearLayout.LayoutParams(0,-2,1));TextView pic=click("▣  "+(portrait==null?"Añadir foto":"Cambiar foto"),this::pickPhoto,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.setMargins(dp(8),0,0,0);if(d.layout==4||d.layout==5)row.addView(pic,pp);
         if(d.layout==4||d.layout==5){
+            if(portrait==null){
+                space(content,9);
+                TextView photoHelp=text("▣  Añade una fotografía para completar este recuerdo. No se exportará sin imagen.",12,c("#80633D"),true);
+                photoHelp.setPadding(dp(12),dp(10),dp(12),dp(10));photoHelp.setBackground(shape(c("#F6ECDD"),12));
+                content.addView(photoHelp,match(-2));
+            }
             space(content,14);content.addView(text("ENCUADRE DE TU FOTO",12,GOLD,true));space(content,8);
             content.addView(text("Ajusta el retrato si deseas acercarlo o moverlo. El recorte se aplicará a la imagen final.",12,MUTED,false));space(content,9);
             sliderControl("Acercar",100,210,(int)(model.zoom*100),v->{model.zoom=v/100f;preview.invalidate();saveDraft();});
@@ -270,7 +307,7 @@ public class MainActivity extends Activity {
         LinearLayout projectButtons=horizontal();content.addView(projectButtons);projectButtons.addView(click("▣ Guardar proyecto",()->saveProject(false),false),new LinearLayout.LayoutParams(0,-2,1));TextView dup=click("⧉ Duplicar",()->saveProject(true),false);LinearLayout.LayoutParams dl=new LinearLayout.LayoutParams(0,-2,1);dl.setMargins(dp(8),0,0,0);projectButtons.addView(dup,dl);space(content,7);content.addView(text("Tus cambios se guardan automáticamente. Las copias independientes se conservan en Mis diseños.",11,MUTED,false));
         space(content,12);content.addView(text("COMPARTE UN RECUERDO",12,GOLD,true));space(content,8);
         LinearLayout bottom=horizontal();content.addView(bottom);bottom.addView(click("↓  Guardar imagen",()->export(false),false),new LinearLayout.LayoutParams(0,-2,1));TextView share=click("↗  Compartir",()->export(true),true);LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(0,-2,1);sp.setMargins(dp(8),0,0,0);bottom.addView(share,sp);space(content,12);
-        content.addView(text("Alta calidad · Sin marca de agua · Solo se guarda en tu teléfono",11,MUTED,false));
+        content.addView(text("PNG 1080 px · Sin marca de agua · Procesamiento privado en tu teléfono",11,MUTED,false));
     }
     interface Change {void value(String s);}
     interface ProgressChange {void value(int n);}
@@ -409,6 +446,15 @@ public class MainActivity extends Activity {
         });
     }
     private void export(boolean share){
+        Design current=designs.get(selected);
+        if((current.layout==4||current.layout==5)&&portrait==null){
+            new AlertDialog.Builder(this)
+                .setTitle("Falta la fotografía")
+                .setMessage("Añade una fotografía para completar este homenaje antes de guardarlo o compartirlo.")
+                .setPositiveButton("Elegir fotografía",(dialog,which)->pickPhoto())
+                .setNegativeButton("Cancelar",null).show();
+            return;
+        }
         if(!exportBusy.compareAndSet(false,true)){toast("Ya estamos preparando tu imagen.");return;}
         Bitmap buffer=null;
         try{
@@ -456,7 +502,7 @@ public class MainActivity extends Activity {
                         Intent chooser=Intent.createChooser(send,"Compartir recuerdo");
                         chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(chooser);
-                    }catch(ActivityNotFoundException e){toast("Imagen guardada. No se encontró una app para compartir.");}
+                    }catch(Exception e){toast("Imagen guardada en la galería. No fue posible abrir el menú para compartir.");}
                 }else toast("Imagen guardada en tu galería ♥");
             });
         });
@@ -492,9 +538,19 @@ public class MainActivity extends Activity {
     }
     @Override public void onBackPressed(){if(atHome)super.onBackPressed();else home();}
     private class CardView extends View {
-        private Design d; private boolean full;
-        CardView(Context ctx,Design design,boolean f){super(ctx);d=design;full=f;setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
-        @Override protected void onDraw(Canvas actual){super.onDraw(actual);int h=model.story?1920:1350;int w=1080;float scale=Math.min(getWidth()/(float)w,getHeight()/(float)h);actual.save();actual.translate((getWidth()-w*scale)/2,(getHeight()-h*scale)/2);actual.scale(scale,scale);render(actual,w,h,d);actual.restore();}
+        private final Design d;
+        CardView(Context ctx,Design design,boolean f){super(ctx);d=design;setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
+        @Override protected void onDraw(Canvas actual){
+            super.onDraw(actual);
+            if(getWidth()<=0||getHeight()<=0)return;
+            int h=model.story?1920:1350;int w=1080;
+            float scale=Math.min(getWidth()/(float)w,getHeight()/(float)h);
+            actual.save();
+            try{
+                actual.translate((getWidth()-w*scale)/2,(getHeight()-h*scale)/2);
+                actual.scale(scale,scale);render(actual,w,h,d);
+            }finally{actual.restore();}
+        }
     }
     private class DesignView extends View {
         Design d;boolean big;DesignView(Context ctx,Design design,boolean b){super(ctx);d=design;big=b;}
