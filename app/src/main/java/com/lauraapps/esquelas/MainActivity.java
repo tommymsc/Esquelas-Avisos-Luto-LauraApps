@@ -23,6 +23,9 @@ public class MainActivity extends Activity {
     private static final int BG=Color.rgb(248,247,245), INK=Color.rgb(37,37,41), MUTED=Color.rgb(110,108,109), GOLD=Color.rgb(128,92,50);
     private LinearLayout root, content, toolbar, options;
     private CardView preview;
+    private AdsController ads;
+    private FrameLayout homeBanner;
+    private TextView privacyButton;
     private TextView sectionTitle, subt;
     private final Model model=new Model();
     private String category="Lazos";
@@ -62,6 +65,9 @@ public class MainActivity extends Activity {
     }
     static int c(String code){return Color.parseColor(code);}
     @Override public void onCreate(Bundle b) {super.onCreate(b); getWindow().setStatusBarColor(c("#161923")); getWindow().setNavigationBarColor(c("#F8F7F5")); getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR); prefs=getSharedPreferences("design_drafts",MODE_PRIVATE); seed(); load(); loadCollections(); home(); loadDraftPhotoAsync();
+        ads=new AdsController(this,()->runOnUiThread(this::updatePrivacyButton));
+        if(homeBanner!=null)ads.attachBanner(homeBanner);
+        ads.start();
         if(Build.VERSION.SDK_INT>=33){
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{
                 if(atHome)finish();else home();
@@ -115,7 +121,13 @@ public class MainActivity extends Activity {
         return t;
     }
     private LinearLayout.LayoutParams match(int h){return new LinearLayout.LayoutParams(-1,h<0?h:dp(h));}
+    private void updatePrivacyButton(){
+        if(privacyButton!=null)privacyButton.setVisibility(
+            ads!=null&&ads.privacyOptionsRequired()?View.VISIBLE:View.GONE);
+    }
     private void setup(String heading,String caption){
+        if(ads!=null)ads.detachBanner();
+        homeBanner=null;privacyButton=null;
         atHome="Un recuerdo que abraza".equals(heading);
         ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setBackgroundColor(BG);
         if(Build.VERSION.SDK_INT>=35){
@@ -260,6 +272,13 @@ public class MainActivity extends Activity {
         LinearLayout tabs=horizontal();tabs.setPadding(0,0,0,dp(9));tabsScroll.addView(tabs);
         for(String cat:categories){TextView chip=text(cat,12,cat.equals(category)?Color.WHITE:INK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(14),dp(12),dp(14),dp(12));chip.setBackground(shape(cat.equals(category)?INK:c("#EEEAE5"),13));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(42));lp.setMargins(dp(2),0,dp(5),0);tabs.addView(chip,lp);chip.setOnClickListener(v->{category=cat;home();});}
         LinearLayout hero=vertical();hero.setPadding(dp(18),dp(14),dp(18),dp(14));hero.setBackground(shape(c("#23252C"),20));content.addView(hero,match(-2));TextView h=text("✦  Tu homenaje, a tu manera",18,Color.WHITE,true);hero.addView(h);space(hero,7);TextView s=text("Lazos que quieres compartir, retratos que abrazan y estados preparados para WhatsApp.",13,c("#E3DCD1"),false);hero.addView(s);space(content,18);
+        // Ads appear only on the library screen, never inside the editor, preview or share flow.
+        homeBanner=new FrameLayout(this);
+        homeBanner.setVisibility(View.GONE);
+        LinearLayout.LayoutParams adMargin=match(-2);
+        adMargin.setMargins(0,dp(12),0,dp(12));
+        content.addView(homeBanner,adMargin);
+        if(ads!=null)ads.attachBanner(homeBanner);
         TextView heading=text("Colección · "+category,19,INK,true);content.addView(heading);space(content,4);content.addView(text("Elige un diseño y hazlo tuyo",12,MUTED,false));space(content,12);
         for(int i=0;i<designs.size();i++){
             Design d=designs.get(i);if(!d.category.equals(category))continue; final int ix=i;
@@ -271,7 +290,10 @@ public class MainActivity extends Activity {
             item.setBackground(new RippleDrawable(android.content.res.ColorStateList.valueOf(0x18000000),shape(Color.WHITE,18),null));
             item.setOnClickListener(v->openDesign(ix));
         }
-        space(content,7);content.addView(text("♥  Sin registro · Sin conexión · Diseños hechos con respeto",11,MUTED,false));
+        space(content,7);content.addView(text("♥  Diseña sin registro · Fotografías privadas · Diseños hechos con respeto",11,MUTED,false));
+        privacyButton=click("Opciones de privacidad y anuncios",()->{if(ads!=null)ads.showPrivacyOptions();},false);
+        content.addView(privacyButton,match(-2));updatePrivacyButton();
+        if(ads!=null)ads.onHomeAfterExport();
     }
     private void editor(){
         Design d=designs.get(selected);setup("Personaliza tu recuerdo",""+d.title+" · Toca las opciones y observa los cambios al instante.");
@@ -503,7 +525,10 @@ public class MainActivity extends Activity {
                         chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(chooser);
                     }catch(Exception e){toast("Imagen guardada en la galería. No fue posible abrir el menú para compartir.");}
-                }else toast("Imagen guardada en tu galería ♥");
+                }else {
+                    if(ads!=null)ads.completedImageDownload();
+                    toast("Imagen guardada en tu galería ♥");
+                }
             });
         });
     }
@@ -534,6 +559,7 @@ public class MainActivity extends Activity {
     @Override protected void onDestroy(){
         photoGeneration++;
         photoWorker.shutdown();exportWorker.shutdown();
+        if(ads!=null)ads.destroy();
         super.onDestroy();
     }
     @Override public void onBackPressed(){if(atHome)super.onBackPressed();else home();}
