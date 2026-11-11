@@ -1,0 +1,15 @@
+startup_secs 3.65
+PASS Inicializa sin errores JavaScript
+PASS 12 diseños de fotografía
+PASS 30 estados listos
+PASS 42 composiciones renderizan
+PASS Formato 4:5 y 9:16
+PASS Edición de texto y vista previa
+PASS Fotografía y optimización
+PASS Guardar proyecto con fotografía
+PASS Duplicar independiente
+PASS Quitar foto sin alterar la copia
+PASS Restaurar proyecto guardado
+PASS Sin errores JS tras interacción
+PASS ID de plantilla inválido no rompe el editor
+PASS Archivo de imagen dañado se rechaza

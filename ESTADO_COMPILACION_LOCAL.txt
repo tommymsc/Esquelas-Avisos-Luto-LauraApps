@@ -1,0 +1,17 @@
+ESTADO DE INTENTO LOCAL - 11/11/2026
+
+No fue posible generar un APK dentro de este entorno.
+Bloqueo técnico comprobado:
+- Java: OpenJDK 21 disponible.
+- Gradle: no instalado.
+- Android SDK / sdkmanager / android.jar / build-tools: no disponibles.
+- Acceso externo de shell: sin DNS para services.gradle.org.
+
+Comprobaciones ejecutadas correctamente:
+- javac de ProjectRules.java y ProjectRulesTest.java.
+- 14 pruebas Java de ProjectRules con resultado PASS.
+- node --check tests/demo.js.
+- python3 tests/verify_package.py: 13 comprobaciones PASS.
+
+El flujo GitHub Actions adjunto ejecuta compilación real, lint y publica el APK.
+Un archivo ZIP con código NO es un APK compilado.
