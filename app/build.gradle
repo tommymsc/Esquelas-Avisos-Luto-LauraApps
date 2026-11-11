@@ -6,22 +6,22 @@ android {
         applicationId 'com.lauraapps.esquelas'
         minSdk 29
         targetSdk 36
-        versionCode 9
-        versionName '1.9.0'
+        versionCode 10
+        versionName '1.9.1'
     }
     buildFeatures { buildConfig true }
-    def realAppId = (project.findProperty('ADMOB_APP_ID') ?: '').toString()
-    def realBanner = (project.findProperty('ADMOB_BANNER_UNIT_ID') ?: '').toString()
-    def realInterstitial = (project.findProperty('ADMOB_INTERSTITIAL_UNIT_ID') ?: '').toString()
-    defaultConfig {
-        manifestPlaceholders = [ADMOB_APP_ID: realAppId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') ? realAppId : 'ca-app-pub-3940256099942544~3347511713']
-    }
+    def realAppId = (project.findProperty('ADMOB_APP_ID') ?: 'ca-app-pub-2506564165861733~2453279576').toString()
+    def realBanner = (project.findProperty('ADMOB_BANNER_UNIT_ID') ?: 'ca-app-pub-2506564165861733/5215174288').toString()
+    def realInterstitial = (project.findProperty('ADMOB_INTERSTITIAL_UNIT_ID') ?: 'ca-app-pub-2506564165861733/4281366564').toString()
     buildTypes {
         debug {
+            // Separate Google's test application ID from the production AdMob app.
+            manifestPlaceholders = [ADMOB_APP_ID: 'ca-app-pub-3940256099942544~3347511713']
             buildConfigField 'String', 'BANNER_AD_UNIT', '"ca-app-pub-3940256099942544/9214589741"'
             buildConfigField 'String', 'INTERSTITIAL_AD_UNIT', '"ca-app-pub-3940256099942544/1033173712"'
         }
         release {
+            manifestPlaceholders = [ADMOB_APP_ID: realAppId]
             minifyEnabled false
             buildConfigField 'String', 'BANNER_AD_UNIT', '"'+ (realAppId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') && realBanner.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ? realBanner : '') +'"'
             buildConfigField 'String', 'INTERSTITIAL_AD_UNIT', '"'+ (realAppId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') && realInterstitial.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ? realInterstitial : '') +'"'
@@ -41,9 +41,9 @@ dependencies {
  */
 tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {
     doFirst {
-        def appId = (project.findProperty('ADMOB_APP_ID') ?: '').toString()
-        def bannerId = (project.findProperty('ADMOB_BANNER_UNIT_ID') ?: '').toString()
-        def interstitialId = (project.findProperty('ADMOB_INTERSTITIAL_UNIT_ID') ?: '').toString()
+        def appId = (project.findProperty('ADMOB_APP_ID') ?: 'ca-app-pub-2506564165861733~2453279576').toString()
+        def bannerId = (project.findProperty('ADMOB_BANNER_UNIT_ID') ?: 'ca-app-pub-2506564165861733/5215174288').toString()
+        def interstitialId = (project.findProperty('ADMOB_INTERSTITIAL_UNIT_ID') ?: 'ca-app-pub-2506564165861733/4281366564').toString()
         if (!appId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') ||
             !bannerId.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ||
             !interstitialId.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ||
