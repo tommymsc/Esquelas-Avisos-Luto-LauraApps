@@ -21,6 +21,7 @@ import org.json.*;
 /** Standalone, offline-first memorial designer. No analytics, account or network permission. */
 public class MainActivity extends Activity {
     private static final int BG=Color.rgb(248,247,245), INK=Color.rgb(37,37,41), MUTED=Color.rgb(110,108,109), GOLD=Color.rgb(128,92,50);
+    private static final String PRIVACY_POLICY_URL="https://tommymsc.github.io/lauraapps-privacy/esquelas-privacy.html";
     private LinearLayout root, content, toolbar, options;
     private CardView preview;
     private AdsController ads;
@@ -121,6 +122,19 @@ public class MainActivity extends Activity {
         return t;
     }
     private LinearLayout.LayoutParams match(int h){return new LinearLayout.LayoutParams(-1,h<0?h:dp(h));}
+    private void openPrivacyPolicy(){
+        try{
+            Intent privacyIntent=new Intent(Intent.ACTION_VIEW,Uri.parse(PRIVACY_POLICY_URL));
+            privacyIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+            startActivity(privacyIntent);
+        }catch(Exception error){
+            new AlertDialog.Builder(this)
+                .setTitle("Política de privacidad")
+                .setMessage("No se pudo abrir el navegador. Consulta nuestra política en:\n"+PRIVACY_POLICY_URL)
+                .setPositiveButton("Entendido",null)
+                .show();
+        }
+    }
     private void updatePrivacyButton(){
         if(privacyButton!=null)privacyButton.setVisibility(
             ads!=null&&ads.privacyOptionsRequired()?View.VISIBLE:View.GONE);
@@ -140,7 +154,11 @@ public class MainActivity extends Activity {
         }
         root=vertical();scroll.addView(root);setContentView(scroll);
         LinearLayout bar=horizontal();bar.setPadding(dp(20),dp(19),dp(20),dp(10));root.addView(bar);
-        LinearLayout brand=vertical();TextView brandName=text("LAURAAPPS  /  MEMORIAS",11,GOLD,true);brand.addView(brandName);TextView top=text("Esquelas & Luto",23,INK,true);brand.addView(top);bar.addView(brand,new LinearLayout.LayoutParams(0,-2,1));TextView heart=text("✦",25,GOLD,true);bar.addView(heart);
+        LinearLayout brand=vertical();TextView brandName=text("LAURAAPPS  /  MEMORIAS",11,GOLD,true);brand.addView(brandName);TextView top=text("Esquelas & Luto",23,INK,true);brand.addView(top);bar.addView(brand,new LinearLayout.LayoutParams(0,-2,1));TextView privacy=click("Privacidad",this::openPrivacyPolicy,false);
+        privacy.setTextSize(12);
+        privacy.setPadding(dp(10),dp(10),dp(10),dp(10));
+        privacy.setContentDescription("Abrir política de privacidad");
+        bar.addView(privacy);
         content=vertical();content.setPadding(dp(18),dp(8),dp(18),dp(30));root.addView(content);
         sectionTitle=text(heading,23,INK,true);content.addView(sectionTitle);
         space(content,6);
