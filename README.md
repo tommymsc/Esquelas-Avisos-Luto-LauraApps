@@ -1,4 +1,4 @@
-# Esquelas y Avisos de Luto — LauraApps v1.7.0
+# Esquelas y Avisos de Luto — LauraApps v1.8.0 (evaluación)
 
 Proyecto Android nativo offline y demo web para crear lazos, esquelas, novenarios, homenajes con fotografías y estados de WhatsApp. Conserva el icono de lazo negro, lirio y vela aprobado.
 
@@ -29,3 +29,17 @@ La versión actual no incluye permisos de internet, analíticas, AdMob, nube ni 
 ## Próximo hito
 
 Compilación de debug + instalación Android + depuración de cualquier error de compilación o ejecución. Después: build AAB firmado y requisitos de Google Play.
+
+
+## Cambios de estabilidad y presentación v1.8
+
+- Se mantiene `main` como referencia probada v1.7; esta mejora vive en `improve/stability-visual-v1.8`.
+- Botones y tarjetas muestran respuesta táctil y son enfocables para accesibilidad.
+- Favoritos, recientes y Mis diseños se organizan verticalmente en pantallas estrechas.
+- El editor mejora separación, jerarquía de encabezados y contraste del texto dorado.
+- El selector de fotografía solo aparece en composiciones que realmente la utilizan.
+- Los diseños con fotografía muestran una instrucción explícita y bloquean exportación hasta seleccionar una imagen.
+- Si no se puede abrir el selector de aplicaciones para compartir, el PNG ya guardado permanece en la galería y se notifica al usuario.
+- Comprobaciones de regresión automatizadas adicionales en `tests/verify_package.py`.
+
+**Alcance de verificación:** GitHub Actions compila `assembleDebug`, ejecuta reglas Java, validaciones y lint; esto no sustituye instalación, pruebas de interfaz y revisión de pantallas en teléfonos reales.
