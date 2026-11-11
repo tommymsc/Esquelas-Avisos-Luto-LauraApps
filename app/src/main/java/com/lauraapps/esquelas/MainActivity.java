@@ -307,11 +307,11 @@ public class MainActivity extends Activity {
                 if(loaded==null)throw new IOException("Imagen vacía");
                 internal=storePrivatePhoto(loaded);
             }catch(Exception | OutOfMemoryError e){failure="No se pudo abrir la fotografía. Prueba con un JPG o PNG diferente.";}
-            final Bitmap result=loaded;final Uri uri=internal;final String error=failure;
+            final Bitmap preparedBitmap=loaded;final Uri uri=internal;final String error=failure;
             runOnUiThread(()->{
                 if(isDestroyed()||token!=photoGeneration)return;
                 if(error!=null){toast(error);return;}
-                portrait=result;photoUri=uri;
+                portrait=preparedBitmap;photoUri=uri;
                 model.zoom=1f;model.x=0;model.y=0;
                 saveDraft();editor();queuePhotoCleanup();
             });
