@@ -10,7 +10,7 @@ assert 'android.permission.INTERNET' in manifest
 assert 'com.google.android.gms.ads.APPLICATION_ID' in manifest
 assert 'android:allowBackup="false"' in manifest
 assert 'targetSdk 36' in gradle and 'compileSdk 36' in gradle
-assert 'versionName \'2.0.1\'' in gradle
+assert "versionName '2.0.2'" in gradle and 'versionCode 13' in gradle
 assert 'gradle-version: \'8.11.1\'' in ci
 assert 'platforms;android-36' in ci
 assert 'private_portraits' in java
