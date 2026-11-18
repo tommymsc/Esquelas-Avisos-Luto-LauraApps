@@ -1,0 +1,49 @@
+name: Check AndroidX SDK warnings - Esquelas 2.0.2
+on:
+  push:
+    branches: [fix/androidx-sdk-warnings-v2-0-2]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Install Android SDK 36
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;35.0.0' || test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+      - name: Inspect actual resolved dependencies
+        run: |
+          gradle --no-daemon :app:dependencyInsight --configuration releaseRuntimeClasspath --dependency androidx.activity:activity > activity-dependencies.txt
+          gradle --no-daemon :app:dependencyInsight --configuration releaseRuntimeClasspath --dependency androidx.fragment:fragment > fragment-dependencies.txt
+          cat activity-dependencies.txt
+          cat fragment-dependencies.txt
+          grep -F 'androidx.activity:activity:1.13.0' activity-dependencies.txt
+          grep -F 'androidx.fragment:fragment:1.9.1' fragment-dependencies.txt
+      - name: Project validation and unit tests
+        run: |
+          mkdir -p .build/test
+          javac -d .build/test app/src/main/java/com/lauraapps/esquelas/ProjectRules.java tests/ProjectRulesTest.java
+          java -ea -cp .build/test com.lauraapps.esquelas.ProjectRulesTest
+          python3 tests/verify_package.py
+          node --check tests/demo.js
+      - name: Build release AAB and debug APK
+        run: gradle --no-daemon :app:bundleRelease :app:assembleDebug --stacktrace
+      - name: Upload inspection and unsigned AAB (not for Play upload)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Esquelas-2-0-2-AndroidX-check-unsigned
+          path: |
+            app/build/outputs/bundle/release/*.aab
+            activity-dependencies.txt
+            fragment-dependencies.txt
+          if-no-files-found: error
