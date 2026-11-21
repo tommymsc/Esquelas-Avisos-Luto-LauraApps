@@ -6,8 +6,8 @@ android {
         applicationId 'com.lauraapps.esquelas'
         minSdk 29
         targetSdk 36
-        versionCode 9
-        versionName '1.9.0'
+        versionCode 10
+        versionName '1.9.1'
     }
     buildFeatures { buildConfig true }
     def realAppId = (project.findProperty('ADMOB_APP_ID') ?: '').toString()
@@ -22,7 +22,9 @@ android {
             buildConfigField 'String', 'INTERSTITIAL_AD_UNIT', '"ca-app-pub-3940256099942544/1033173712"'
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField 'String', 'BANNER_AD_UNIT', '"'+ (realAppId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') && realBanner.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ? realBanner : '') +'"'
             buildConfigField 'String', 'INTERSTITIAL_AD_UNIT', '"'+ (realAppId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') && realInterstitial.matches('ca-app-pub-[0-9]{16}/[0-9]{10}') ? realInterstitial : '') +'"'
         }
