@@ -524,9 +524,10 @@ public class MainActivity extends Activity {
                         Intent chooser=Intent.createChooser(send,"Compartir recuerdo");
                         chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(chooser);
+                        if(ads!=null)ads.completedImageExport();
                     }catch(Exception e){toast("Imagen guardada en la galería. No fue posible abrir el menú para compartir.");}
                 }else {
-                    if(ads!=null)ads.completedImageDownload();
+                    if(ads!=null)ads.completedImageExport();
                     toast("Imagen guardada en tu galería ♥");
                 }
             });

@@ -38,8 +38,10 @@ final class AdsController {
     private boolean ready = false, destroyed = false, interstitialLoading = false;
     private final long startedAt = SystemClock.elapsedRealtime();
     private long lastInterstitialAt = 0L;
-    private int completedDownloads = 0;
-    private static final long MIN_DELAY_MS = 180_000L;
+    private int completedExports = 0;
+    // One completed design is enough; never interrupt saving/sharing or app launch.
+    private static final long FIRST_AD_GRACE_MS = 30_000L;
+    private static final long INTERSTITIAL_COOLDOWN_MS = 120_000L;
 
     AdsController(Activity activity, Runnable privacyUiChanged) {
         this.activity = activity;
@@ -175,30 +177,38 @@ final class AdsController {
             });
     }
 
-    void completedImageDownload() {
-        completedDownloads = Math.min(3, completedDownloads + 1);
+    /** Count a successful save or share, never a failed export or a mere button tap. */
+    void completedImageExport() {
+        completedExports = Math.min(1, completedExports + 1);
     }
 
     /** Called only when returning home, not while editing or sharing. */
     void onHomeAfterExport() {
         long now = SystemClock.elapsedRealtime();
         if (!ready || destroyed || consent == null || !consent.canRequestAds() ||
-            completedDownloads < 3 || interstitial == null ||
-            now-startedAt < MIN_DELAY_MS ||
-            (lastInterstitialAt != 0 && now-lastInterstitialAt < MIN_DELAY_MS)) return;
+            completedExports < 1 || interstitial == null ||
+            now-startedAt < FIRST_AD_GRACE_MS ||
+            (lastInterstitialAt != 0 && now-lastInterstitialAt < INTERSTITIAL_COOLDOWN_MS)) return;
         InterstitialAd ad = interstitial;
         interstitial = null;
-        completedDownloads = 0;
-        lastInterstitialAt = now;
+        completedExports = 0;
         ad.setFullScreenContentCallback(new FullScreenContentCallback() {
+            @Override public void onAdShowedFullScreenContent() {
+                lastInterstitialAt = SystemClock.elapsedRealtime();
+                android.util.Log.d("EsquelasAds", "Interstitial displayed at completed-design transition");
+            }
             @Override public void onAdDismissedFullScreenContent() {
                 if (!destroyed) loadInterstitial();
             }
             @Override public void onAdFailedToShowFullScreenContent(AdError error) {
+                android.util.Log.w("EsquelasAds", "Interstitial failed to show: " + error.getCode());
                 if (!destroyed) loadInterstitial();
             }
         });
-        try { ad.show(activity); } catch (RuntimeException ignored) { loadInterstitial(); }
+        try { ad.show(activity); } catch (RuntimeException error) {
+            android.util.Log.w("EsquelasAds", "Interstitial could not open", error);
+            if (!destroyed) loadInterstitial();
+        }
     }
 
     void destroy() {
