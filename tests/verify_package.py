@@ -10,7 +10,7 @@ assert 'android.permission.INTERNET' in manifest
 assert 'com.google.android.gms.ads.APPLICATION_ID' in manifest
 assert 'android:allowBackup="false"' in manifest
 assert 'targetSdk 36' in gradle and 'compileSdk 36' in gradle
-assert "versionName '1.9.1'" in gradle and 'versionCode 10' in gradle
+assert "versionName '2.0.3'" in gradle and 'versionCode 14' in gradle
 assert 'minifyEnabled true' in gradle and 'shrinkResources true' in gradle
 assert 'proguard-android-optimize.txt' in gradle and (root/'app/proguard-rules.pro').is_file()
 assert 'gradle-version: \'8.11.1\'' in ci
