@@ -40,6 +40,9 @@ android {
         // This build must NEVER be uploaded to Play; release still requires real IDs and key.
         r8Qa {
             initWith release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
             manifestPlaceholders = [ADMOB_APP_ID: 'ca-app-pub-3940256099942544~3347511713']
             buildConfigField 'String', 'BANNER_AD_UNIT', '"ca-app-pub-3940256099942544/9214589741"'
