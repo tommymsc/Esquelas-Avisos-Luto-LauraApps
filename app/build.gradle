@@ -16,12 +16,28 @@ android {
     defaultConfig {
         manifestPlaceholders = [ADMOB_APP_ID: realAppId.matches('ca-app-pub-[0-9]{16}~[0-9]{10}') ? realAppId : 'ca-app-pub-3940256099942544~3347511713']
     }
+    // Signing is configured only when CI provides a verified upload-key keystore.
+    def uploadStore = System.getenv('ESQUELAS_UPLOAD_KEYSTORE_PATH')
+    def uploadStorePassword = System.getenv('ESQUELAS_UPLOAD_KEYSTORE_PASSWORD')
+    def uploadAlias = System.getenv('ESQUELAS_UPLOAD_KEY_ALIAS')
+    def uploadKeyPassword = System.getenv('ESQUELAS_UPLOAD_KEY_PASSWORD')
+    if (uploadStore && uploadStorePassword && uploadAlias && uploadKeyPassword) {
+        signingConfigs {
+            upload {
+                storeFile file(uploadStore)
+                storePassword uploadStorePassword
+                keyAlias uploadAlias
+                keyPassword uploadKeyPassword
+            }
+        }
+    }
     buildTypes {
         debug {
             buildConfigField 'String', 'BANNER_AD_UNIT', '"ca-app-pub-3940256099942544/9214589741"'
             buildConfigField 'String', 'INTERSTITIAL_AD_UNIT', '"ca-app-pub-3940256099942544/1033173712"'
         }
         release {
+            if (signingConfigs.findByName('upload') != null) signingConfig signingConfigs.upload
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
