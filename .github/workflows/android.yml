@@ -1,7 +1,8 @@
-name: Compilar Esquelas y Avisos de Luto (APK)
+name: Esquelas y Avisos de Luto - QA y AAB optimizado
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
     branches: [main, master, 'improve/**']
 
@@ -10,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    name: Android 16 - Debug APK y verificaciones
+    name: Android 16 - QA, R8 y AAB cuando hay firma
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -55,10 +56,63 @@ jobs:
       - name: Publicar APK descargable
         uses: actions/upload-artifact@v4
         with:
-          name: Esquelas-Avisos-Luto-v1-9-debug-APK
+          name: Esquelas-Avisos-Luto-v1-9-1-debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
+      - name: Validar versión y configuración R8
+        run: |
+          grep -q 'versionCode 10' app/build.gradle
+          grep -q "versionName '1.9.1'" app/build.gradle
+          grep -q 'minSdk 29' app/build.gradle
+          grep -q 'targetSdk 36' app/build.gradle
+          grep -q 'minifyEnabled true' app/build.gradle
+          grep -q 'shrinkResources true' app/build.gradle
+          grep -q 'play-services-ads:25.5.0' app/build.gradle
+          grep -q 'user-messaging-platform:4.0.0' app/build.gradle
+          test -s app/proguard-rules.pro
+      - name: Preparar secretos de firma y AdMob para producción
+        id: signing
+        env:
+          ESQUELAS_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ESQUELAS_UPLOAD_KEYSTORE_BASE64 }}
+          ESQUELAS_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ESQUELAS_UPLOAD_KEYSTORE_PASSWORD }}
+          ESQUELAS_UPLOAD_KEY_ALIAS: ${{ secrets.ESQUELAS_UPLOAD_KEY_ALIAS }}
+          ESQUELAS_UPLOAD_KEY_PASSWORD: ${{ secrets.ESQUELAS_UPLOAD_KEY_PASSWORD }}
+          ESQUELAS_ADMOB_APP_ID: ${{ secrets.ESQUELAS_ADMOB_APP_ID }}
+          ESQUELAS_ADMOB_BANNER_UNIT_ID: ${{ secrets.ESQUELAS_ADMOB_BANNER_UNIT_ID }}
+          ESQUELAS_ADMOB_INTERSTITIAL_UNIT_ID: ${{ secrets.ESQUELAS_ADMOB_INTERSTITIAL_UNIT_ID }}
+        run: python3 scripts/configure_release_signing.py
+      - name: Compilar AAB release firmado con R8
+        if: steps.signing.outputs.release_ready == 'true'
+        env:
+          ESQUELAS_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ESQUELAS_UPLOAD_KEYSTORE_PASSWORD }}
+          ESQUELAS_UPLOAD_KEY_ALIAS: ${{ secrets.ESQUELAS_UPLOAD_KEY_ALIAS }}
+          ESQUELAS_UPLOAD_KEY_PASSWORD: ${{ secrets.ESQUELAS_UPLOAD_KEY_PASSWORD }}
+          ORG_GRADLE_PROJECT_ADMOB_APP_ID: ${{ secrets.ESQUELAS_ADMOB_APP_ID }}
+          ORG_GRADLE_PROJECT_ADMOB_BANNER_UNIT_ID: ${{ secrets.ESQUELAS_ADMOB_BANNER_UNIT_ID }}
+          ORG_GRADLE_PROJECT_ADMOB_INTERSTITIAL_UNIT_ID: ${{ secrets.ESQUELAS_ADMOB_INTERSTITIAL_UNIT_ID }}
+        run: gradle --no-daemon :app:bundleRelease --stacktrace
+      - name: Verificar mapping de R8 y firma del bundle
+        if: steps.signing.outputs.release_ready == 'true'
+        run: |
+          test -s app/build/outputs/mapping/release/mapping.txt
+          test -s app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/esquelas-signature.txt
+          grep -q 'jar verified' /tmp/esquelas-signature.txt
+      - name: Publicar AAB firmado para Play
+        if: steps.signing.outputs.release_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Esquelas-v1.9.1-CODIGO10-AAB-FIRMADO
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+      - name: Publicar mapping para desofuscación
+        if: steps.signing.outputs.release_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Esquelas-v1.9.1-CODIGO10-R8-MAPPING
+          path: app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
       - name: Publicar reportes de lint
         if: always()
         uses: actions/upload-artifact@v4
