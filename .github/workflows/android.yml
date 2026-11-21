@@ -62,8 +62,8 @@ jobs:
           retention-days: 30
       - name: Validar versión y configuración R8
         run: |
-          grep -q 'versionCode 10' app/build.gradle
-          grep -q "versionName '1.9.1'" app/build.gradle
+          grep -q 'versionCode 14' app/build.gradle
+          grep -q "versionName '2.0.3'" app/build.gradle
           grep -q 'minSdk 29' app/build.gradle
           grep -q 'targetSdk 36' app/build.gradle
           grep -q 'minifyEnabled true' app/build.gradle
@@ -83,6 +83,29 @@ jobs:
         with:
           name: Esquelas-1.9.1-R8-QA-APK-NO-PLAY
           path: app/build/outputs/apk/r8Qa/*.apk
+          if-no-files-found: error
+      - name: Compilar AAB optimizado sin firma para firma local original
+        env:
+          ORG_GRADLE_PROJECT_ADMOB_APP_ID: ca-app-pub-2506564165861733~2453279576
+          ORG_GRADLE_PROJECT_ADMOB_BANNER_UNIT_ID: ca-app-pub-2506564165861733/5215174288
+          ORG_GRADLE_PROJECT_ADMOB_INTERSTITIAL_UNIT_ID: ca-app-pub-2506564165861733/4281366564
+        run: gradle --no-daemon :app:bundleRelease --stacktrace
+      - name: Verificar AAB optimizado y mapping para firma local
+        run: |
+          test -s app/build/outputs/bundle/release/app-release.aab
+          test -s app/build/outputs/mapping/release/mapping.txt
+          sha256sum app/build/outputs/bundle/release/app-release.aab
+      - name: Publicar AAB SIN firma (solo para firma fuera de GitHub)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Esquelas-2.0.3-CODIGO14-AAB-SIN-FIRMA
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+      - name: Publicar mapping release R8
+        uses: actions/upload-artifact@v4
+        with:
+          name: Esquelas-2.0.3-CODIGO14-R8-MAPPING
+          path: app/build/outputs/mapping/release/mapping.txt
           if-no-files-found: error
       - name: Preparar secretos de firma y AdMob para producción
         id: signing
