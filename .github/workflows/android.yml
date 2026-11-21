@@ -71,6 +71,19 @@ jobs:
           grep -q 'play-services-ads:25.5.0' app/build.gradle
           grep -q 'user-messaging-platform:4.0.0' app/build.gradle
           test -s app/proguard-rules.pro
+      - name: Compilar R8 QA con anuncios de prueba sin secretos de producción
+        run: gradle --no-daemon :app:assembleR8Qa --stacktrace
+      - name: Verificar mapping R8 del build QA
+        run: |
+          test -s app/build/outputs/mapping/r8Qa/mapping.txt
+          test -s app/build/outputs/apk/r8Qa/app-r8Qa.apk
+          sha256sum app/build/outputs/apk/r8Qa/app-r8Qa.apk
+      - name: Publicar APK QA optimizado (NO subir a Play)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Esquelas-1.9.1-R8-QA-APK-NO-PLAY
+          path: app/build/outputs/apk/r8Qa/*.apk
+          if-no-files-found: error
       - name: Preparar secretos de firma y AdMob para producción
         id: signing
         env:

@@ -36,6 +36,18 @@ android {
             buildConfigField 'String', 'BANNER_AD_UNIT', '"ca-app-pub-3940256099942544/9214589741"'
             buildConfigField 'String', 'INTERSTITIAL_AD_UNIT', '"ca-app-pub-3940256099942544/1033173712"'
         }
+        // R8 QA build: genuine optimized code, Google test ad IDs, DEBUG signing only.
+        // This build must NEVER be uploaded to Play; release still requires real IDs and key.
+        r8Qa {
+            initWith release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+            manifestPlaceholders = [ADMOB_APP_ID: 'ca-app-pub-3940256099942544~3347511713']
+            buildConfigField 'String', 'BANNER_AD_UNIT', '"ca-app-pub-3940256099942544/9214589741"'
+            buildConfigField 'String', 'INTERSTITIAL_AD_UNIT', '"ca-app-pub-3940256099942544/1033173712"'
+        }
         release {
             if (signingConfigs.findByName('upload') != null) signingConfig signingConfigs.upload
             minifyEnabled true
