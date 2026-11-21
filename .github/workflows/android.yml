@@ -62,8 +62,8 @@ jobs:
           retention-days: 30
       - name: Validar versión y configuración R8
         run: |
-          grep -q 'versionCode 10' app/build.gradle
-          grep -q "versionName '1.9.1'" app/build.gradle
+          grep -q 'versionCode 14' app/build.gradle
+          grep -q "versionName '2.0.3'" app/build.gradle
           grep -q 'minSdk 29' app/build.gradle
           grep -q 'targetSdk 36' app/build.gradle
           grep -q 'minifyEnabled true' app/build.gradle
