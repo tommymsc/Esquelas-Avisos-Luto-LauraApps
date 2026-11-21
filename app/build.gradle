@@ -6,8 +6,8 @@ android {
         applicationId 'com.lauraapps.esquelas'
         minSdk 29
         targetSdk 36
-        versionCode 10
-        versionName '1.9.1'
+        versionCode 14
+        versionName '2.0.3'
     }
     buildFeatures { buildConfig true }
     def realAppId = (project.findProperty('ADMOB_APP_ID') ?: '').toString()
